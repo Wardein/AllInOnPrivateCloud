@@ -1,0 +1,249 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(45deg, #1a1a2e, #16213e, #0f3460);
+    color: #e0e0e0;
+}
+
+.container {
+    background-color: rgba(30, 30, 30, 0.6);
+    backdrop-filter: blur(10px);
+    padding: 2.5rem;
+    border-radius: 15px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+.container:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* Login page specific styles */
+.login-container {
+    width: 100%;
+    max-width: 350px;
+}
+
+/* Menu page specific styles */
+.menu-container {
+    display: flex;
+    width: 100%;
+    max-width: 1200px;
+}
+
+.main-content {
+    display: flex;
+    flex: 3;
+}
+
+h1, h2, h3 {
+    color: #ffffff;
+    margin-bottom: 1.5rem;
+    letter-spacing: 1px;
+}
+
+h1, h2 {
+    font-size: 2rem;
+    text-align: center;
+}
+
+h3 {
+    font-size: 1.5rem;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    margin-bottom: 0.5rem;
+    color: #b0b0b0;
+    font-size: 0.9rem;
+}
+
+input {
+    padding: 0.75rem;
+    margin-bottom: 1.5rem;
+    border: none;
+    border-radius: 8px;
+    background-color: rgba(44, 44, 44, 0.8);
+    color: #e0e0e0;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+input:focus {
+    outline: none;
+    background-color: rgba(60, 60, 60, 0.8);
+    box-shadow: 0 0 0 2px rgba(65, 105, 225, 0.5);
+}
+
+.button {
+    padding: 0.75rem;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 1rem;
+    margin: 0.5rem 0;
+    font-weight: 600;
+    background: linear-gradient(45deg, #007bff, #00bfff);
+}
+
+.button:hover {
+    background: linear-gradient(45deg, #0056b3, #0099cc);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
+}
+
+.login-container .button {
+    width: 100%;
+    display: block;
+}
+
+.error-message {
+    background-color: rgba(255, 0, 0, 0.1);
+    border: 1px solid rgba(255, 0, 0, 0.3);
+    color: #ff6b6b;
+    padding: 0.75rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    display: none;
+}
+
+/* Menu specific styles */
+.menu {
+    flex: 1;
+    margin-right: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Add this line to center the menu items */
+}
+
+.menu ul {
+    list-style-type: none;
+    flex-grow: 1;
+}
+
+.menu li {
+    margin-bottom: 1rem;
+    width: 200px; /* Add this line to set a fixed width */
+}
+
+.menu .button {
+    width: 100%; /* Add this to make the button fill the list item */
+    text-align: left; /* Add this to align text to the left */
+    padding-left: 1rem; /* Add some left padding for better appearance */
+}
+
+.logout-button {
+    margin-top: auto;
+    background: linear-gradient(45deg, #ff3e3e, #ff8f8f);
+}
+
+.logout-button:hover {
+    background: linear-gradient(45deg, #e60000, #ff6666);
+}
+
+/* Calendar specific styles */
+.calendar {
+    flex: 2;
+    margin-right: 2rem;
+}
+
+.calendar table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.calendar th, .calendar td {
+    padding: 0.5rem;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.calendar th {
+    background-color: rgba(0, 123, 255, 0.2);
+    font-weight: bold;
+}
+
+.calendar .today {
+    background-color: rgba(0, 123, 255, 0.4);
+    font-weight: bold;
+}
+
+.calendar .appointment {
+    background-color: rgba(0, 255, 0, 0.2);
+    cursor: pointer;
+}
+
+.appointment-details {
+    display: none;
+    position: absolute;
+    background-color: rgba(30, 30, 30, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 1rem;
+    z-index: 1000;
+}
+
+/* Widget styles */
+.widgets {
+    flex: 1;
+}
+
+.weather-widget, .upcoming-appointments {
+    background-color: rgba(44, 44, 44, 0.8);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.weather-info {
+    text-align: center;
+}
+
+.temperature {
+    font-size: 2rem;
+    font-weight: bold;
+    margin: 0.5rem 0;
+}
+
+.upcoming-appointments ul {
+    list-style-type: none;
+}
+
+.upcoming-appointments li {
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.upcoming-appointments li:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.upcoming-appointments p {
+    font-size: 0.9rem;
+    color: #b0b0b0;
+}
+
