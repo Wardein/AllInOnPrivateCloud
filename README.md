@@ -13,10 +13,13 @@ Build greatness using your own data
 
 # How to set up PrivateCloud for development
 1. `git clone` or download it using the green button at the top that says "Code.
-2. Install go (version 1.23.4 or newer)
+2. Install go (version 1.23.4 or newer; on Ubuntu: `sudo snap install go --classic`)
 3. Open terminal in the projects root directory (where the main.go file is)
 4. ```go mod tidy```
 5. ```go run .```
+
+# Troubleshooting
+If you're having issues, try `go clean -cache`
 
 # Get in touch
 - don't
