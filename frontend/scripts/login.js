@@ -45,7 +45,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         showError('Das Passwort muss mindestens 3 Zeichen lang sein.');
     } else if (e.submitter == anmeldebutton) {
         try {
-            const response = await fetch("http://localhost:8080/login", {
+            const response = await fetch("/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username, password }),
@@ -59,11 +59,19 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
                 showError('Login fehlgeschlagen: ' + error);
             }
         } catch (error) {
-            showError('Fehler aufgetreten: ' + error.message);
+            console.log("test>>>");
+            console.log(error);
+            console.log("<<<");
+            if (error.body == "Invalid username or password") {
+                showError("Invalid username or password!");
+            } else
+            {
+                showError('Fehler aufgetreten: ' + error.message);
+            }
         }
     } else if (e.submitter == registrierungsbutton) {
         try {
-            const response = await fetch("http://localhost:8080/register", {
+            const response = await fetch("/register", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username, password }),

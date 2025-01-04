@@ -8,11 +8,11 @@ import (
 	"log"
 	"main/plugininterface"
 	"net/http"
+	"github.com/rs/cors"
 	"os"
 	"path/filepath"
 	"plugin"
 	"time"
-
 	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -38,6 +38,17 @@ func main() {
 	//http.Handle("/", fs)
 	mux := http.NewServeMux()
 
+	handler := cors.Default().Handler(mux)
+	c := cors.New(cors.Options{
+		AllowOriginFunc: allowOrigins,
+		AllowCredentials: true,
+		AllowedMethods: []string{"GET", "POST", "OPTIONS"}, // Todo: Move this to config file
+		OptionsPassthrough: true,
+		// Enable Debugging for testing, consider disabling in production
+		Debug: true, // Todo: add environment config / debug flag or whatever to automatically distinguish between debug environment and production environment
+	})
+	handler = c.Handler(handler)
+
 	mux.Handle("/styles/", http.StripPrefix("/styles/", http.FileServer(http.Dir("./frontend/styles"))))
 	mux.Handle("/scripts/", http.StripPrefix("/scripts/", http.FileServer(http.Dir("./frontend/scripts"))))
 	mux.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir("./frontend/html"))))
@@ -59,7 +70,12 @@ func main() {
 
 	// Start the server
 	fmt.Println("Server running on http://localhost:8080")
-	http.ListenAndServe(":8080", mux)
+	http.ListenAndServe(":8080", handler) // Todo: Port auslagern in Config
+}
+
+func allowOrigins(origin string) bool {
+	// Todo: Add proper handling here & configuration & handle the configuration in a setup script.
+	return true
 }
 
 func registerHandler(w http.ResponseWriter, r *http.Request) {
