@@ -8,12 +8,13 @@ import (
 	"log"
 	"main/plugininterface"
 	"net/http"
-	"github.com/rs/cors"
 	"os"
 	"path/filepath"
 	"plugin"
 	"time"
+
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/rs/cors"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -40,9 +41,9 @@ func main() {
 
 	handler := cors.Default().Handler(mux)
 	c := cors.New(cors.Options{
-		AllowOriginFunc: allowOrigins,
-		AllowCredentials: true,
-		AllowedMethods: []string{"GET", "POST", "OPTIONS"}, // TODO: Move this to config file
+		AllowOriginFunc:    allowOrigins,
+		AllowCredentials:   true,
+		AllowedMethods:     []string{"GET", "POST", "OPTIONS"}, // TODO: Move this to config file
 		OptionsPassthrough: true,
 		// Enable Debugging for testing, consider disabling in production
 		Debug: true, // TODO: add environment config / debug flag or whatever to automatically distinguish between debug environment and production environment
@@ -60,7 +61,6 @@ func main() {
 	mux.HandleFunc("/welcome", welcomeHandler)
 
 	loadPlugins()
-	log.Println(pluginList)
 
 	// API-Endpunkt für die Plugin-Liste
 	mux.HandleFunc("/api/plugins", func(w http.ResponseWriter, r *http.Request) {
@@ -152,7 +152,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		Value:    tokenString,
 		Expires:  expirationTime,
 		HttpOnly: true,                    // Verhindert JavaScript-Zugriff auf Cookies
-		Secure:   false,                    // Nur über HTTPS verfügbar
+		Secure:   false,                   // Nur über HTTPS verfügbar
 		SameSite: http.SameSiteStrictMode, // Verhindert Cross-Site Cookie-Zugriffe
 	})
 }
@@ -215,7 +215,6 @@ func loadPlugins() {
 
 			// Symbol "Plugin" laden
 			sym, err := p.Lookup("Plugin")
-			log.Println(sym)
 			if err != nil {
 				log.Printf("Fehler beim Suchen nach Symbol 'Plugin' in %s: %v", path, err)
 				return nil
@@ -237,5 +236,7 @@ func loadPlugins() {
 
 	if err != nil {
 		log.Fatalf("Fehler beim Laden der Plugins: %v", err)
+	} else if pluginList == nil {
+		log.Println("Keine Plugins gefunden")
 	}
 }
