@@ -1,22 +1,27 @@
 document.addEventListener("DOMContentLoaded", function () {
-    // Beim Laden der Seite prüfen, ob ein gültiger Token vorhanden ist
-    const token = getCookie("token");
-    console.log("Token gefunden:", token); // Überprüfen, ob ein Token vorhanden ist
-  
-    if (token) {
-      console.log("Token vorhanden, Prüfung beginnt...");
-      fetch('/welcome', { method: 'GET', credentials: 'same-origin' })
-        .then(response => {
-          if (response.ok) {
-            console.log("Token ist gültig, Weiterleitung zum Menü...");
-            window.location.href = 'menu.html'; // Weiterleitung zum Menü
-          } else {
-            console.log("Token ist ungültig");
-          }
-        })
-        .catch(error => {
-          console.error("Fehler bei der Token-Prüfung", error);
-        });
+    console.log(window.location.href);
+    if (window.location.pathname == "/") {
+        // Beim Laden der Seite prüfen, ob ein gültiger Token vorhanden ist
+        const token = getCookie("token");
+        //console.log("Token gefunden:", token); // Überprüfen, ob ein Token vorhanden ist
+      
+        if (token) {
+          console.log("Token vorhanden, Prüfung beginnt...");
+          fetch('/welcome', { method: 'GET', credentials: 'same-origin' })
+            .then(response => {
+              if (response.ok) {
+                console.log("Token ist gültig, Weiterleitung zum Menü...");
+                window.location.href = 'menu.html'; // Weiterleitung zum Menü
+              } else {
+                console.log("Token ist ungültig");
+              }
+            })
+            .catch(error => {
+              console.error("Fehler bei der Token-Prüfung", error);
+            });
+        } else {
+            window.location.href = 'login.html'; // Weiterleitung zum Login
+        }
     }
   });
   

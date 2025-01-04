@@ -42,10 +42,10 @@ func main() {
 	c := cors.New(cors.Options{
 		AllowOriginFunc: allowOrigins,
 		AllowCredentials: true,
-		AllowedMethods: []string{"GET", "POST", "OPTIONS"}, // Todo: Move this to config file
+		AllowedMethods: []string{"GET", "POST", "OPTIONS"}, // TODO: Move this to config file
 		OptionsPassthrough: true,
 		// Enable Debugging for testing, consider disabling in production
-		Debug: true, // Todo: add environment config / debug flag or whatever to automatically distinguish between debug environment and production environment
+		Debug: true, // TODO: add environment config / debug flag or whatever to automatically distinguish between debug environment and production environment
 	})
 	handler = c.Handler(handler)
 
@@ -70,11 +70,11 @@ func main() {
 
 	// Start the server
 	fmt.Println("Server running on http://localhost:8080")
-	http.ListenAndServe(":8080", handler) // Todo: Port auslagern in Config
+	http.ListenAndServe(":8080", handler) // TODO: Port auslagern in Config
 }
 
 func allowOrigins(origin string) bool {
-	// Todo: Add proper handling here & configuration & handle the configuration in a setup script.
+	// TODO: Add proper handling here & configuration & handle the configuration in a setup script.
 	return true
 }
 
@@ -152,7 +152,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		Value:    tokenString,
 		Expires:  expirationTime,
 		HttpOnly: true,                    // Verhindert JavaScript-Zugriff auf Cookies
-		Secure:   true,                    // Nur über HTTPS verfügbar
+		Secure:   false,                    // Nur über HTTPS verfügbar
 		SameSite: http.SameSiteStrictMode, // Verhindert Cross-Site Cookie-Zugriffe
 	})
 }
