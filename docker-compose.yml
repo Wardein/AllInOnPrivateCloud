@@ -1,0 +1,22 @@
+version: '3.9'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./plugins:/app/plugins
+      - ./frontend:/app/frontend
+      - ./data:/app/data 
+      - ./main.go:/app/main.go
+      - ./database.go:/app/database.go 
+      - ./plugininterface:/app/plugininterface 
+    ports:
+      - "8080:8080"  
+    environment:
+      - DATABASE_PATH=/app/data/database.db  
+
+volumes:
+  data:
+    driver: local
