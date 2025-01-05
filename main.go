@@ -2,7 +2,7 @@ package main
 
 import (
 	//"AllInOnPrivateCloud/plugininterface"
-	"database/sql"
+
 	"encoding/json"
 	"fmt"
 	"log"
@@ -16,6 +16,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/rs/cors"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 var jwtKey = []byte("my_secret_key")
@@ -29,6 +30,12 @@ type Claims struct {
 	Username string `json:"username"`
 	jwt.RegisteredClaims
 }
+
+/*type User struct {
+	ID       uint   `gorm:"primaryKey"`
+	Username string `gorm:"unique"`
+	Password string
+}*/
 
 var pluginList []plugininterface.PluginMetadata
 
@@ -97,9 +104,15 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = db.Exec("INSERT INTO users (username, password) VALUES (?, ?)", creds.Username, hashedPassword)
-	if err != nil {
-		http.Error(w, "Failed to create user: "+err.Error(), http.StatusInternalServerError)
+	user := User{
+		Username: creds.Username,
+		Password: string(hashedPassword),
+	}
+	result := db.Create(&user)
+
+	// Fehlerbehandlung
+	if result.Error != nil {
+		http.Error(w, "Failed to create user: "+result.Error.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -115,18 +128,20 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var storedPassword string
-	err = db.QueryRow("SELECT password FROM users WHERE username = ?", creds.Username).Scan(&storedPassword)
-	if err != nil {
-		if err == sql.ErrNoRows {
+	var user User
+	result := db.Where("username = ?", creds.Username).First(&user)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
 			http.Error(w, "Invalid username or password", http.StatusUnauthorized)
 			return
 		}
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		http.Error(w, "Database error: "+result.Error.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(creds.Password))
+	// Vergleiche das Passwort nur, wenn der Benutzer existiert
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(creds.Password))
 	if err != nil {
 		http.Error(w, "Invalid username or password", http.StatusUnauthorized)
 		return
