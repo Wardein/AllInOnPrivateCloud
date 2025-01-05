@@ -28,14 +28,9 @@ type Credentials struct {
 
 type Claims struct {
 	Username string `json:"username"`
+	UserID   uint   `json:"userid"`
 	jwt.RegisteredClaims
 }
-
-/*type User struct {
-	ID       uint   `gorm:"primaryKey"`
-	Username string `gorm:"unique"`
-	Password string
-}*/
 
 var pluginList []plugininterface.PluginMetadata
 
@@ -147,9 +142,10 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	expirationTime := time.Now().Add(15 * time.Minute)
+	expirationTime := time.Now().Add(time.Hour * 24)
 	claims := &Claims{
 		Username: creds.Username,
+		UserID:   user.ID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 		},
