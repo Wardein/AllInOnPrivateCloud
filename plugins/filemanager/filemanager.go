@@ -17,11 +17,21 @@ type FileManagerPlugin struct{}
 
 func (p FileManagerPlugin) Metadata() plugininterface.PluginMetadata {
 	return plugininterface.PluginMetadata{
-		Name:        "File Manager",
-		Description: "Ein Plugin zum Verwalten von Dateien",
-		Path:        "/plugins/filemanager.html",
+		Name:          "File Manager",
+		Description:   "Ein Plugin zum Verwalten von Dateien",
+		Path:          "/plugins/filemanager.html",
+		MenuButton:    true,
+		UsingDatabase: true,
 	}
 }
+
+/*func Migrate(db *gorm.DB) error {
+	return nil
+}
+
+func Initialize() error {
+	return nil
+}*/
 
 // Exportiertes Plugin-Objekt
 var Plugin FileManagerPlugin

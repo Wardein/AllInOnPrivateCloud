@@ -5,12 +5,7 @@ import (
 
 	"encoding/json"
 	"fmt"
-	"log"
-	"main/plugininterface"
 	"net/http"
-	"os"
-	"path/filepath"
-	"plugin"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -31,8 +26,6 @@ type Claims struct {
 	UserID   uint   `json:"userid"`
 	jwt.RegisteredClaims
 }
-
-var pluginList []plugininterface.PluginMetadata
 
 func main() {
 	initDatabase()
@@ -62,12 +55,10 @@ func main() {
 	mux.HandleFunc("/login", loginHandler)
 	mux.HandleFunc("/welcome", welcomeHandler)
 
-	loadPlugins()
-
 	// API-Endpunkt für die Plugin-Liste
 	mux.HandleFunc("/api/plugins", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(pluginList)
+		json.NewEncoder(w).Encode(loadPlugins())
 	})
 
 	// Start the server
@@ -203,51 +194,4 @@ func welcomeHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"message": fmt.Sprintf("Welcome %s!", claims.Username)})
-}
-
-func loadPlugins() {
-	pluginDir := "./plugins"
-
-	err := filepath.Walk(pluginDir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		// Nur .so-Dateien laden
-		if !info.IsDir() && filepath.Ext(path) == ".so" {
-			log.Printf("Lade Plugin: %s", path)
-
-			// Plugin öffnen
-			p, err := plugin.Open(path)
-			if err != nil {
-				log.Printf("Fehler beim Laden des Plugins %s: %v", path, err)
-				return nil
-			}
-
-			// Symbol "Plugin" laden
-			sym, err := p.Lookup("Plugin")
-			if err != nil {
-				log.Printf("Fehler beim Suchen nach Symbol 'Plugin' in %s: %v", path, err)
-				return nil
-			}
-
-			// Typprüfung und Registrierung
-			if plg, ok := sym.(plugininterface.Plugin); ok {
-				//plg.Register(mux)
-				log.Printf("Plugin registriert: %s", plg.Metadata().Name)
-
-				// Füge Plugin-Metadaten zur globalen Liste hinzu
-				pluginList = append(pluginList, plg.Metadata())
-			} else {
-				log.Printf("Ungültiger Plugin-Typ in %s", path)
-			}
-		}
-		return nil
-	})
-
-	if err != nil {
-		log.Fatalf("Fehler beim Laden der Plugins: %v", err)
-	} else if pluginList == nil {
-		log.Println("Keine Plugins gefunden")
-	}
 }
