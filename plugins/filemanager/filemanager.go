@@ -1,7 +1,10 @@
 package main
 
 import (
+	"log"
 	"main/plugininterface"
+
+	"gorm.io/gorm"
 )
 
 //go build -buildmode=plugin -o plugins/filemanager/filemanager.so plugins/filemanager/filemanager.go
@@ -25,11 +28,12 @@ func (p FileManagerPlugin) Metadata() plugininterface.PluginMetadata {
 	}
 }
 
-/*func Migrate(db *gorm.DB) error {
+func (p FileManagerPlugin) Migrate(db *gorm.DB) error {
+	log.Println("migrate called")
 	return nil
 }
 
-func Initialize() error {
+/*func Initialize() error {
 	return nil
 }*/
 

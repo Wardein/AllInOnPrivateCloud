@@ -5,6 +5,7 @@ import (
 
 	"encoding/json"
 	"fmt"
+	"main/plugininterface"
 	"net/http"
 	"time"
 
@@ -26,6 +27,8 @@ type Claims struct {
 	UserID   uint   `json:"userid"`
 	jwt.RegisteredClaims
 }
+
+var pluginList []plugininterface.PluginMetadata
 
 func main() {
 	initDatabase()
@@ -56,9 +59,13 @@ func main() {
 	mux.HandleFunc("/welcome", welcomeHandler)
 
 	// API-Endpunkt für die Plugin-Liste
+
 	mux.HandleFunc("/api/plugins", func(w http.ResponseWriter, r *http.Request) {
+		if !pluginsLoaded {
+			pluginList = loadPlugins()
+		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(loadPlugins())
+		json.NewEncoder(w).Encode(pluginList)
 	})
 
 	// Start the server

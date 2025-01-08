@@ -1,5 +1,7 @@
 package plugininterface
 
+import "gorm.io/gorm"
+
 // PluginMetadata enthält Metadaten für ein Plugin.
 type PluginMetadata struct {
 	Name          string `json:"Name"`
@@ -14,4 +16,8 @@ type Plugin interface {
 	Metadata() PluginMetadata
 	//Migrate(db *gorm.DB) error
 	//Initialize() error
+}
+
+type PluginDatabase interface {
+	Migrate(db *gorm.DB) error
 }
