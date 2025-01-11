@@ -8,7 +8,8 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 )
-//import "github.com/gookit/goutil/dump" // DEBUG - dump variables with this
+
+// import "github.com/gookit/goutil/dump" // DEBUG - dump variables with this
 var db *sql.DB
 
 // Initialisiere die Datenbank
@@ -43,39 +44,38 @@ func initDatabase() {
 
 	request := `SELECT data FROM system WHERE "key" = 'dbsystem';`
 	result, err = db.Query(request)
-	if (err != nil) {
+	if err != nil {
 		currentVersion = 0
 		versionAfterMigration = migrate(currentVersion)
-		if (versionAfterMigration >= 1) {
+		if versionAfterMigration >= 1 {
 			dbupdate := updateDBVersion(versionAfterMigration)
 			errorsInInit = errorsInInit || dbupdate
 		} else {
 			errorsInInit = true
 		}
-	} else
-	{
+	} else {
 		defer result.Close()
 		var jsonData string
 		result.Next()
 		err = result.Scan(&jsonData)
-		if (err != nil) {
+		if err != nil {
 			log.Fatalf("Error retrieving the version from the database: %v", err)
 		}
 		currentVersion, err = extractVersionFromJSON(jsonData)
-		if (err != nil) {
+		if err != nil {
 			log.Fatalf("Unable to extract version from JSON! The database might be corrupt. %v", err)
 		} else {
 			versionAfterMigration = migrate(currentVersion)
-			if (versionAfterMigration > currentVersion) {
+			if versionAfterMigration > currentVersion {
 				dbupdate := updateDBVersion(versionAfterMigration)
 				errorsInInit = errorsInInit || dbupdate
 			}
 		}
 	}
-	if (versionAfterMigration > currentVersion) {
+	if versionAfterMigration > currentVersion {
 		fmt.Printf("Database was migrated from version %v to %v\n", currentVersion, versionAfterMigration)
 	}
-	if (!errorsInInit) {
+	if !errorsInInit {
 		fmt.Println("Database initialized successfully.")
 	} else {
 		fmt.Println("Database was not initialized successfully!\n Please consult the logs for more information.")
@@ -83,8 +83,8 @@ func initDatabase() {
 }
 
 func migrate(version int) int {
-	if (version < 1) {
-		request:= `
+	if version < 1 {
+		request := `
 		-- Create the table "system"
 		CREATE TABLE system (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -96,11 +96,11 @@ func migrate(version int) int {
 		INSERT INTO system ("key", data)
 		VALUES ('dbsystem', '{"version":1}');
 		`
-		if (tryExecute(request, true)) {
+		if tryExecute(request, true) {
 			version = 1
 		}
 	}
-	if (version <= 1) {
+	if version <= 1 {
 		// etc. Future db migrations go here. Always execute db migrations from here; never by hand!
 		// version = 2 // make sure to use tryExecute
 	}
@@ -111,8 +111,8 @@ func migrate(version int) int {
 func tryExecute(request string, logfatal ...bool) bool { // Todo: Maybe move this to some kind of db utils file
 	var err error
 	_, err = db.Exec(request)
-	if (err != nil) {
-		if (logfatal != nil) {
+	if err != nil {
+		if logfatal != nil {
 			log.Fatalf("Failed to fulfill request: %v due to error: %v", request, err) // Todo: circle back on whether this formatting is correct
 		}
 		return false
@@ -160,29 +160,28 @@ func updateAttributeInJSON(jsonStr string, attributeName string, value interface
 	return string(updatedJSON), nil
 }
 
-
 func updateDBVersion(version int) bool {
 	var result *sql.Rows
 	var err error
 	request := `SELECT data FROM system WHERE "key" = 'dbsystem';`
 	result, err = db.Query(request)
-	if (err != nil) {
+	if err != nil {
 		log.Fatalf("Error retrieving the version from the database")
 	} else {
 		var data string
 		result.Scan(&data)
 		updatedData, err := updateAttributeInJSON(data, "version", version)
-		if (err != nil) {
-			fmt.Errorf("Error updating the version in the database json: %w", err)
+		if err != nil {
+			log.Printf("Error updating the version in the database json: %s", err)
 			return false
 		} else {
 			request = `UPDATE system SET data = ? WHERE "key" = 'dbsystem'`
 			_, err := db.Exec(request, updatedData)
 			if err != nil {
-				fmt.Errorf("Error updating version in database: %w", err)
+				log.Printf("Error updating version in database: %s", err)
 				return false
 			}
-			return true	
+			return true
 		}
 	}
 	return false
