@@ -15,6 +15,7 @@ Build greatness using your own data
 1. `git clone` or download it using the green button at the top that says "Code.
 2. Install go (version 1.23.4 or newer; on Ubuntu: `sudo snap install go --classic`)
 3. Open terminal in the projects root directory (where the main.go file is)
+4. ```go mod init```
 4. ```go mod tidy```
 5. ```go run .```
 
@@ -34,6 +35,10 @@ If you're having issues, try `go clean -cache`
 - Notes
 - Kanban
 - Android-App
+- Settings panel (User settings & admin settings)
+- Permission system (custom permissions? Maybe like in minecraft with \[pluginname].[subset\].\[permission type\])
+- Localization (probably a struct that gets initialized with an array of strings mapped to the target language; e.g. log.Printf(localize["Error: Unable to load plugin %s: %v"], path, err))
 - Minecraftserver overview
+- Maybe a setting to use display the login page as a public dashboard instead? (e.g. Minecraft stats)
 
 THIS WiLL NEVER BE FINNISHED! (bet)

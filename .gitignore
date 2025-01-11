@@ -2,3 +2,4 @@ go.sum
 datenbank.db
 go.mod
 *.so
+main

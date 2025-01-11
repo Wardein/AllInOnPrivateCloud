@@ -223,12 +223,33 @@ func loadPlugins() {
 			// Typprüfung und Registrierung
 			if plg, ok := sym.(plugininterface.Plugin); ok {
 				//plg.Register(mux)
-				log.Printf("Plugin registriert: %s", plg.Metadata().Name)
+				metadata := plg.Metadata()
+
+				log.Printf("Plugin registriert: %s", metadata.Name)
 
 				// Füge Plugin-Metadaten zur globalen Liste hinzu
-				pluginList = append(pluginList, plg.Metadata())
+				pluginList = append(pluginList, metadata)
+
+				api := plugininterface.Api{
+					Metadata: metadata,
+					Mux:      http.NewServeMux(),
+					RegisterWidget: func() error {
+						fmt.Println("RegisterWidget called") // TODO: implement RegisterWidget functionality here or preferrably in a API scripts file
+						return nil
+					},
+					RegisterMenuEntry: func() error {
+						fmt.Println("RegisterMenuEntry called") // TODO: implement RegisterMenu functionality here or preferrably in a API scripts file
+						return nil
+					},
+				}
+
+				err = plg.Init(api)
+				if err != nil {
+					log.Printf("Fehler beim Laden des Plugins %s: %v", path, err)
+				}
 			} else {
-				log.Printf("Ungültiger Plugin-Typ in %s", path)
+				log.Printf("Ungültiger Plugin-Typ in %s", path) // TODO: maybe remove this
+				return fmt.Errorf("ungültiger plugin-typ in %s", path)
 			}
 		}
 		return nil
