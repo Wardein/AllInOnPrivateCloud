@@ -40,5 +40,7 @@ If you're having issues, try `go clean -cache`
 - Localization (probably a struct that gets initialized with an array of strings mapped to the target language; e.g. log.Printf(localize["Error: Unable to load plugin %s: %v"], path, err))
 - Minecraftserver overview
 - Maybe a setting to use display the login page as a public dashboard instead? (e.g. Minecraft stats)
+- Add a license file (GPLv3?)
+- Create a release pipeline?
 
 THIS WiLL NEVER BE FINNISHED! (bet)
