@@ -5,12 +5,8 @@ import (
 
 	"encoding/json"
 	"fmt"
-	"log"
 	"main/plugininterface"
 	"net/http"
-	"os"
-	"path/filepath"
-	"plugin"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -207,7 +203,7 @@ func welcomeHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"message": fmt.Sprintf("Welcome %s!", claims.Username)})
 }
 
-func loadPlugins() {
+/*func loadPlugins() {
 	pluginDir := "./plugins"
 
 	err := filepath.Walk(pluginDir, func(path string, info os.FileInfo, err error) error {
@@ -273,4 +269,4 @@ func loadPlugins() {
 	} else if pluginList == nil {
 		log.Println("Keine Plugins gefunden")
 	}
-}
+}*/
