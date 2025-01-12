@@ -1,188 +1,113 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
 
-	_ "github.com/mattn/go-sqlite3"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
-// import "github.com/gookit/goutil/dump" // DEBUG - dump variables with this
-var db *sql.DB
+type User struct {
+	ID       uint   `gorm:"primaryKey"`
+	Username string `gorm:"unique;not null"`
+	Password string `gorm:"not null"`
+}
 
-// Initialisiere die Datenbank
+type System struct {
+	ID   uint   `gorm:"primaryKey"`
+	Key  string `gorm:"not null"`
+	Data string
+}
+
+var db *gorm.DB
+
 func initDatabase() {
 	var err error
-	var result *sql.Rows
-	var versionAfterMigration int
-	var currentVersion int
-	errorsInInit := false
-	db, err = sql.Open("sqlite3", "./datenbank.db")
+	db, err = gorm.Open(sqlite.Open("datenbank.db"), &gorm.Config{})
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
-	// Tabelle erstellen, falls sie nicht existiert
-	createTable := `
-	CREATE TABLE IF NOT EXISTS users (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		username TEXT NOT NULL UNIQUE,
-		password TEXT NOT NULL
-	);`
-
-	/*addAdmin := `
-	INSERT INTO users VALUES (
-		'1','admin', 'test'
-	);`*/
-	_, err = db.Exec(createTable)
-
+	// Automatische Migration der Tabellen
+	err = db.AutoMigrate(&User{}, &System{})
 	if err != nil {
-		log.Fatalf("Failed to create table: %v", err)
+		log.Fatalf("Failed to migrate database: %v", err)
 	}
 
-	request := `SELECT data FROM system WHERE "key" = 'dbsystem';`
-	result, err = db.Query(request)
+	// Initialisierung der System-Tabelle
+	initializeSystemTable()
+}
+
+func initializeSystemTable() {
+	var system System
+	err := db.FirstOrCreate(&system, System{Key: "dbsystem", Data: `{"version":1}`}).Error
 	if err != nil {
-		currentVersion = 0
-		versionAfterMigration = migrate(currentVersion)
-		if versionAfterMigration >= 1 {
-			dbupdate := updateDBVersion(versionAfterMigration)
-			errorsInInit = errorsInInit || dbupdate
-		} else {
-			errorsInInit = true
-		}
-	} else {
-		defer result.Close()
-		var jsonData string
-		result.Next()
-		err = result.Scan(&jsonData)
-		if err != nil {
-			log.Fatalf("Error retrieving the version from the database: %v", err)
-		}
-		currentVersion, err = extractVersionFromJSON(jsonData)
-		if err != nil {
-			log.Fatalf("Unable to extract version from JSON! The database might be corrupt. %v", err)
-		} else {
-			versionAfterMigration = migrate(currentVersion)
-			if versionAfterMigration > currentVersion {
-				dbupdate := updateDBVersion(versionAfterMigration)
-				errorsInInit = errorsInInit || dbupdate
-			}
-		}
-	}
-	if versionAfterMigration > currentVersion {
-		fmt.Printf("Database was migrated from version %v to %v\n", currentVersion, versionAfterMigration)
-	}
-	if !errorsInInit {
-		fmt.Println("Database initialized successfully.")
-	} else {
-		fmt.Println("Database was not initialized successfully!\n Please consult the logs for more information.")
+		log.Fatalf("Failed to initialize system table: %v", err)
 	}
 }
 
-func migrate(version int) int {
-	if version < 1 {
-		request := `
-		-- Create the table "system"
-		CREATE TABLE system (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			"key" NVARCHAR(128) NOT NULL,
-			data NVARCHAR
-		);
-
-		-- Insert the first row
-		INSERT INTO system ("key", data)
-		VALUES ('dbsystem', '{"version":1}');
-		`
-		if tryExecute(request, true) {
-			version = 1
-		}
+func getCurrentVersion() (int, error) {
+	var system System
+	if err := db.Where("key = ?", "dbsystem").First(&system).Error; err != nil {
+		return 0, err
 	}
-	if version <= 1 {
-		// etc. Future db migrations go here. Always execute db migrations from here; never by hand!
-		// version = 2 // make sure to use tryExecute
-	}
-	fmt.Println("System database version:", version)
-	return version
-}
 
-func tryExecute(request string, logfatal ...bool) bool { // Todo: Maybe move this to some kind of db utils file
-	var err error
-	_, err = db.Exec(request)
-	if err != nil {
-		if logfatal != nil {
-			log.Fatalf("Failed to fulfill request: %v due to error: %v", request, err) // Todo: circle back on whether this formatting is correct
-		}
-		return false
-	}
-	return true
-}
-
-func extractVersionFromJSON(jsonStr string) (int, error) {
-	// Define a map to hold the parsed JSON
 	var data map[string]interface{}
-
-	// Parse the JSON string into the map
-	err := json.Unmarshal([]byte(jsonStr), &data)
-	if err != nil {
-		return 0, err // Return 0 and the error if parsing fails
+	if err := json.Unmarshal([]byte(system.Data), &data); err != nil {
+		return 0, err
 	}
 
-	// Extract the "version" field and assert it's a float64 (default JSON number type in Go)
 	if version, ok := data["version"].(float64); ok {
-		return int(version), nil // Convert float64 to int and return it
+		return int(version), nil
 	}
-
-	return 0, fmt.Errorf("key 'version' not found or not a number")
+	return 0, fmt.Errorf("Version not found in system table")
 }
 
-func updateAttributeInJSON(jsonStr string, attributeName string, value interface{}) (interface{}, error) { // Todo: Move this functions to some kind of util
-	// Define a map to hold the parsed JSON
+func updateVersion(newVersion int) error {
+	var system System
+	if err := db.Where("key = ?", "dbsystem").First(&system).Error; err != nil {
+		return err
+	}
+
 	var data map[string]interface{}
+	if err := json.Unmarshal([]byte(system.Data), &data); err != nil {
+		return err
+	}
+	data["version"] = newVersion
 
-	// Parse the JSON string into the map
-	err := json.Unmarshal([]byte(jsonStr), &data)
+	updatedData, err := json.Marshal(data)
 	if err != nil {
-		return "", err // Return an empty string and the error if parsing fails
+		return err
 	}
 
-	// Set the "version" field to 2
-	data[attributeName] = value
-
-	// Convert the updated map back to a JSON string
-	updatedJSON, err := json.Marshal(data)
-	if err != nil {
-		return "", err // Return an empty string and the error if marshaling fails
-	}
-
-	return string(updatedJSON), nil
+	system.Data = string(updatedData)
+	return db.Save(&system).Error
 }
 
-func updateDBVersion(version int) bool {
-	var result *sql.Rows
-	var err error
-	request := `SELECT data FROM system WHERE "key" = 'dbsystem';`
-	result, err = db.Query(request)
+func migrate() {
+	currentVersion, err := getCurrentVersion()
 	if err != nil {
-		log.Fatalf("Error retrieving the version from the database")
-	} else {
-		var data string
-		result.Scan(&data)
-		updatedData, err := updateAttributeInJSON(data, "version", version)
-		if err != nil {
-			log.Printf("Error updating the version in the database json: %s", err)
-			return false
-		} else {
-			request = `UPDATE system SET data = ? WHERE "key" = 'dbsystem'`
-			_, err := db.Exec(request, updatedData)
-			if err != nil {
-				log.Printf("Error updating version in database: %s", err)
-				return false
-			}
-			return true
+		log.Fatalf("Failed to get current version: %v", err)
+	}
+
+	if currentVersion < 1 {
+		// Beispiel: Migration für Version 1
+		if err := migrateToVersion1(); err != nil {
+			log.Fatalf("Migration to version 1 failed: %v", err)
+		}
+		currentVersion = 1
+		if err := updateVersion(currentVersion); err != nil {
+			log.Fatalf("Failed to update version: %v", err)
 		}
 	}
-	return false
+
+	// Weitere Migrationen können hier hinzugefügt werden
+	fmt.Printf("Database migrated to version %d\n", currentVersion)
+}
+
+func migrateToVersion1() error {
+	// Beispielhafte Migration für Version 1
+	return db.Create(&System{Key: "dbsystem", Data: `{"version":1}`}).Error
 }

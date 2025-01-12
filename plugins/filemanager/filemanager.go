@@ -1,7 +1,10 @@
 package main
 
 import (
+	"log"
 	"main/plugininterface"
+
+	"gorm.io/gorm"
 )
 
 //go build -buildmode=plugin -o plugins/filemanager/filemanager.so plugins/filemanager/filemanager.go
@@ -17,11 +20,22 @@ type FileManagerPlugin struct{}
 
 func (p FileManagerPlugin) Metadata() plugininterface.PluginMetadata {
 	return plugininterface.PluginMetadata{
-		Name:        "File Manager",
-		Description: "Ein Plugin zum Verwalten von Dateien",
-		Path:        "/plugins/filemanager.html",
+		Name:          "File Manager",
+		Description:   "Ein Plugin zum Verwalten von Dateien",
+		Path:          "/plugins/filemanager.html",
+		MenuButton:    true,
+		UsingDatabase: true,
 	}
 }
+
+func (p FileManagerPlugin) Migrate(db *gorm.DB) error {
+	log.Println("migrate called")
+	return nil
+}
+
+/*func Initialize() error {
+	return nil
+}*/
 
 // Exportiertes Plugin-Objekt
 var Plugin FileManagerPlugin

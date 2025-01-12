@@ -17,9 +17,11 @@ type NotesPlugin struct{}
 
 func (p NotesPlugin) Metadata() plugininterface.PluginMetadata {
 	return plugininterface.PluginMetadata{
-		Name:        "Notes",
-		Description: "Ein Plugin zum Erstellen und Verwalten von Notizen",
-		Path:        "/plugins/notes.html",
+		Name:          "Notes",
+		Description:   "Ein Plugin zum Erstellen und Verwalten von Notizen",
+		Path:          "/plugins/notes.html",
+		MenuButton:    true,
+		UsingDatabase: true,
 	}
 }
 
