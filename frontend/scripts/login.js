@@ -1,13 +1,15 @@
-document.addEventListener("DOMContentLoaded", function () {
+import { checkJwt } from '/scripts/cookie.js';
+
+document.addEventListener("DOMContentLoaded", async () => {
     console.log(window.location.href);
     if (window.location.pathname == "/") {
         // Beim Laden der Seite prüfen, ob ein gültiger Token vorhanden ist
-        const token = getCookie("token");
+        /*const token = getCookie("token");
         //console.log("Token gefunden:", token); // Überprüfen, ob ein Token vorhanden ist
       
         if (token) {
           console.log("Token vorhanden, Prüfung beginnt...");
-          fetch('/welcome', { method: 'GET', credentials: 'same-origin' })
+          fetch('/check-token', { method: 'GET', credentials: 'same-origin' })
             .then(response => {
               if (response.ok) {
                 console.log("Token ist gültig, Weiterleitung zum Menü...");
@@ -21,7 +23,12 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         } else {
             window.location.href = 'login.html'; // Weiterleitung zum Login
-        }
+        }*/
+            if (await checkJwt()) {
+                window.location.href = 'menu.html';
+            } else {
+                window.location.href = 'login.html';
+            }
     }
   });
   

@@ -5,6 +5,7 @@ import (
 
 	"encoding/json"
 	"fmt"
+	"log"
 	"main/plugininterface"
 	"net/http"
 	"time"
@@ -14,19 +15,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
-
-var jwtKey = []byte("my_secret_key")
-
-type Credentials struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-type Claims struct {
-	Username string `json:"username"`
-	UserID   uint   `json:"userid"`
-	jwt.RegisteredClaims
-}
 
 var pluginList []plugininterface.PluginMetadata
 
@@ -57,6 +45,7 @@ func main() {
 	mux.HandleFunc("/register", registerHandler)
 	mux.HandleFunc("/login", loginHandler)
 	mux.HandleFunc("/welcome", welcomeHandler)
+	mux.HandleFunc("/check-token", checkToken)
 
 	// API-Endpunkt für die Plugin-Liste
 
@@ -79,6 +68,7 @@ func allowOrigins(origin string) bool {
 }
 
 func registerHandler(w http.ResponseWriter, r *http.Request) {
+	//TODO: Registrierung soll von Admin genehmigt werden, Anzahl unbestätigter Registrierungen beschränkt
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
@@ -140,44 +130,31 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	expirationTime := time.Now().Add(time.Hour * 24)
+	//expirationTime := time.Now().Add(time.Hour * 24)
 	claims := &Claims{
 		Username: creds.Username,
 		UserID:   user.ID,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(expirationTime),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
 		},
 	}
+	generateToken(w, claims)
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString(jwtKey)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	http.SetCookie(w, &http.Cookie{
-		Name:     "token",
-		Value:    tokenString,
-		Expires:  expirationTime,
-		HttpOnly: true,                    // Verhindert JavaScript-Zugriff auf Cookies
-		Secure:   false,                   // Nur über HTTPS verfügbar
-		SameSite: http.SameSiteStrictMode, // Verhindert Cross-Site Cookie-Zugriffe
-	})
 }
 
 func welcomeHandler(w http.ResponseWriter, r *http.Request) {
+	//TODO: funktionalität gleicht checkToken(), Handler eventuell nicht mehr benötigt
 	// Überprüfen des Cookies
+	log.Println("welcomeHandler")
 	cookie, err := r.Cookie("token")
 	if err != nil {
 		if err == http.ErrNoCookie {
-			// Kein Cookie gefunden, also unauthorized
-			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte("Token fehlt"))
+			// Kein Cookie vorhanden
+			http.Error(w, "Token fehlt", http.StatusUnauthorized)
 			return
 		}
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Fehler beim Abrufen des Tokens"))
+		// Fehler beim Abrufen des Cookies
+		http.Error(w, "Fehler beim Abrufen des Tokens", http.StatusBadRequest)
 		return
 	}
 
@@ -189,20 +166,26 @@ func welcomeHandler(w http.ResponseWriter, r *http.Request) {
 	token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
 		return jwtKey, nil
 	})
-
 	if err != nil || !token.Valid {
-		// Ungültiges Token, Unauthorized
-		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Ungültiges Token"))
+		// Token ist ungültig
+		log.Println("Token ungültig:", err)
+		http.Error(w, "Ungültiges Token", http.StatusUnauthorized)
 		return
 	}
 
+	log.Printf("Token gültig für Benutzer: %s (ID: %d)\n", claims.Username, claims.UserID)
 	// Erfolgreich authentifiziert, User willkommen heißen
-	w.WriteHeader(http.StatusOK)
+	response := map[string]string{
+		"message":  fmt.Sprintf("Welcome %s!", claims.Username),
+		"username": claims.Username,
+		"id":       claims.ID,
+	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"message": fmt.Sprintf("Welcome %s!", claims.Username)})
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
 }
 
+//TODO: funktion in LoadPlugin aus pluginmanager integrieren
 /*func loadPlugins() {
 	pluginDir := "./plugins"
 
