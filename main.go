@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"main/plugininterface"
 	"net/http"
 	"time"
 
@@ -15,8 +14,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
-
-var pluginList []plugininterface.PluginMetadata
 
 func main() {
 	initDatabase()
@@ -50,11 +47,9 @@ func main() {
 	// API-Endpunkt für die Plugin-Liste
 
 	mux.HandleFunc("/api/plugins", func(w http.ResponseWriter, r *http.Request) {
-		if !pluginsLoaded {
-			pluginList = loadPlugins()
-		}
+		pl := loadPlugins(mux)
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(pluginList)
+		json.NewEncoder(w).Encode(pl)
 	})
 
 	// Start the server

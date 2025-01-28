@@ -42,77 +42,52 @@
     </div>
 
     <script>
-        const apiBaseUrl = '/plugins/filemanager.html'; //TODO: nur für jetzt
-        const token = getCookie("token");
+       document.addEventListener("DOMContentLoaded", () => {
+    const fileListElement = document.getElementById("fileList");
+    const uploadForm = document.getElementById("uploadForm");
 
-        function getCookie(name) {
-            const value = `; ${document.cookie}`;
-            const parts = value.split(`; ${name}=`);
-            if (parts.length === 2) return parts.pop().split(';').shift();
-        }
+    // Lade die Dateistruktur vom Server
+    async function loadFiles() {
+        const response = await fetch("/files");
+        const files = await response.json();
 
-        // Display welcome message
-        const username = getCookie('username');
-        console.log(username)
+        fileListElement.innerHTML = "<h3>Available Files</h3>";
+        files.forEach(file => {
+            const fileItem = document.createElement("div");
+            fileItem.className = "file-item";
 
-        // Function to fetch and display files
-        async function fetchFiles() {
-            const response = await fetch(`${apiBaseUrl}/files`);
-            const files = await response.json();
+            fileItem.innerHTML = `
+                <span>${file.isDir ? "📁" : "📄"} ${file.name}</span>
+                <span>${file.fullPath}</span>
+            `;
+            fileListElement.appendChild(fileItem);
+        });
+    }
 
-            const fileList = document.getElementById('fileList');
-            fileList.innerHTML = '<h3>Available Files</h3>';
+    // Datei-Upload-Handler
+    uploadForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const fileInput = document.getElementById("fileInput");
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
 
-            files.forEach(file => {
-                const fileItem = document.createElement('div');
-                fileItem.className = 'file-item';
-
-                fileItem.innerHTML = `
-                    <span>${file.name}</span>
-                    <div>
-                        <button onclick="downloadFile('${file.name}')">Download</button>
-                        <button onclick="openFile('${file.name}')">Open</button>
-                    </div>
-                `;
-
-                fileList.appendChild(fileItem);
-            });
-        }
-
-        // Function to download a file
-        function downloadFile(fileName) {
-            window.location.href = `${apiBaseUrl}/download?filename=${encodeURIComponent(fileName)}`;
-        }
-
-        // Function to open a file (assumes it's viewable in the browser)
-        function openFile(fileName) {
-            window.open(`${apiBaseUrl}/open?filename=${encodeURIComponent(fileName)}`, '_blank');
-        }
-
-        // Handle file upload
-        const uploadForm = document.getElementById('uploadForm');
-        uploadForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const fileInput = document.getElementById('fileInput');
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
-
-            const response = await fetch(`${apiBaseUrl}/upload`, {
-                method: 'POST',
-                body: formData
-            });
-
-            if (response.ok) {
-                alert('File uploaded successfully');
-                fetchFiles(); // Refresh the file list
-            } else {
-                alert('Failed to upload file');
-            }
+        const response = await fetch("/upload", {
+            method: "POST",
+            body: formData,
         });
 
-        // Initial load of files
-        fetchFiles();
+        if (response.ok) {
+            alert("File uploaded successfully");
+            loadFiles(); // Liste aktualisieren
+        } else {
+            alert("File upload failed");
+        }
+    });
+
+    // Initiale Dateiliste laden
+    loadFiles();
+});
+
     </script>
 </body>
 </html>

@@ -15,11 +15,15 @@ type PluginMetadata struct {
 	UsingDatabase bool   `json:"UsingDatabase"` //TODO: Implement automaigrate functions for plugins
 }
 
+type Route struct {
+	Path    string
+	Handler func(http.ResponseWriter, *http.Request)
+}
+
 // Plugin definiert die Schnittstelle, die jedes Plugin implementieren muss.
 type Plugin interface {
 	Metadata() PluginMetadata
-	//Migrate(db *gorm.DB) error
-	//Initialize() error
+	Routes() []Route
 }
 
 type PluginDatabase interface {

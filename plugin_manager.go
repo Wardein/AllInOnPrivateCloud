@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"main/plugininterface"
+	"net/http"
 	"os"
 	"path/filepath"
 	"plugin"
@@ -11,6 +12,10 @@ import (
 
 type PluginManager struct {
 	plugins []plugininterface.Plugin
+}
+type PluginInitData struct {
+	Metadata plugininterface.PluginMetadata
+	Routes   []plugininterface.Route
 }
 
 // RegisterPlugin registriert ein Plugin
@@ -41,7 +46,7 @@ func (pm *PluginManager) RegisterPlugin(plugin plugininterface.Plugin) {
 }*/
 var pluginsLoaded bool
 
-func loadPlugins() []plugininterface.PluginMetadata {
+func loadPlugins(mux *http.ServeMux) []plugininterface.PluginMetadata {
 	pluginDir := "./plugins"
 	var pl []plugininterface.PluginMetadata
 	err := filepath.Walk(pluginDir, func(path string, info os.FileInfo, err error) error {
@@ -53,7 +58,7 @@ func loadPlugins() []plugininterface.PluginMetadata {
 		if !info.IsDir() && filepath.Ext(path) == ".so" {
 			log.Printf("Lade Plugin: %s", path)
 
-			addPlugin(path, &pl)
+			addPlugin(path, &pl, mux)
 		}
 		return nil
 	})
@@ -66,7 +71,7 @@ func loadPlugins() []plugininterface.PluginMetadata {
 	return pl
 }
 
-func addPlugin(path string, pl *[]plugininterface.PluginMetadata) error {
+func addPlugin(path string, pl *[]plugininterface.PluginMetadata, mux *http.ServeMux) error {
 	p, err := plugin.Open(path)
 	if err != nil {
 		return fmt.Errorf("fehler beim Laden des Plugins %s: %v", path, err)
@@ -83,9 +88,13 @@ func addPlugin(path string, pl *[]plugininterface.PluginMetadata) error {
 
 		// Füge Plugin-Metadaten zur globalen Liste hinzu
 		*pl = append(*pl, plg.Metadata())
+		for _, route := range plg.Routes() {
+			mux.HandleFunc(route.Path, route.Handler)
+		}
 	} else {
 		return fmt.Errorf("ungültiger Plugin-Typ in %s", path)
 	}
+
 	if dbPlugin, ok := plg.(plugininterface.PluginDatabase); ok {
 		log.Printf("Migration wird für Plugin '%s' gestartet", plg.Metadata().Name)
 
