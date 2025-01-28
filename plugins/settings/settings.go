@@ -28,6 +28,10 @@ func (p settingsPlugin) Metadata() plugininterface.PluginMetadata {
 	}
 }
 
+func (p settingsPlugin) Routes() []plugininterface.Route {
+	return nil
+}
+
 func (p settingsPlugin) Init(api plugininterface.Api) error {
 	log.Println("DEBUG@settings - Init")
 	log.Println(api)

@@ -9,9 +9,9 @@ import (
 
 //go build -buildmode=plugin -o plugins/anotherURL/anotherURL.so plugins/anotherURL/anotherURL.go
 
-type FileManagerPlugin struct{}
+type URLPlugin struct{}
 
-func (p FileManagerPlugin) Metadata() plugininterface.PluginMetadata {
+func (p URLPlugin) Metadata() plugininterface.PluginMetadata {
 
 	return plugininterface.PluginMetadata{
 		Name:          "example.com",
@@ -22,5 +22,9 @@ func (p FileManagerPlugin) Metadata() plugininterface.PluginMetadata {
 	}
 }
 
+func (p URLPlugin) Routes() []plugininterface.Route {
+	return nil
+}
+
 // Exportiertes Plugin-Objekt
-var Plugin FileManagerPlugin
+var Plugin URLPlugin

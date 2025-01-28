@@ -25,5 +25,9 @@ func (p NotesPlugin) Metadata() plugininterface.PluginMetadata {
 	}
 }
 
+func (p NotesPlugin) Routes() []plugininterface.Route {
+	return nil
+}
+
 // Exportiertes Plugin-Objekt
 var Plugin NotesPlugin
