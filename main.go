@@ -33,9 +33,16 @@ func main() {
 	})
 	handler = c.Handler(handler)
 
+	//mux.Handle("/styles/", http.StripPrefix("/styles/", http.FileServer(http.Dir("./frontend/styles"))))
+	//mux.Handle("/scripts/", http.StripPrefix("/scripts/", http.FileServer(http.Dir("./frontend/scripts"))))
+	//mux.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir("./frontend/html"))))
 	mux.Handle("/styles/", http.StripPrefix("/styles/", http.FileServer(http.Dir("./frontend/styles"))))
 	mux.Handle("/scripts/", http.StripPrefix("/scripts/", http.FileServer(http.Dir("./frontend/scripts"))))
-	mux.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir("./frontend/html"))))
+
+	// Kein StripPrefix nötig für Root
+	//mux.Handle("/", http.FileServer(http.Dir("./frontend/html")))
+	fileServer := http.FileServer(http.Dir("./frontend/html"))
+	mux.Handle("/", logRequests(fileServer))
 
 	//http.ListenAndServe(":8080", mux)
 	// API routes
@@ -55,6 +62,13 @@ func main() {
 	// Start the server
 	fmt.Println("Server running on http://localhost:8080")
 	http.ListenAndServe(":8080", handler) // TODO: Port auslagern in Config
+}
+
+func logRequests(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("Anfrage: %s %s", r.Method, r.URL.Path)
+		handler.ServeHTTP(w, r) // Anfrage an den echten Handler weiterleiten
+	})
 }
 
 func allowOrigins(origin string) bool {
